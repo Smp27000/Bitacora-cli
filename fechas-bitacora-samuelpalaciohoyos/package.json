@@ -1,0 +1,16 @@
+{
+  "name": "fechas-bitacora-samuelpalaciohoyos",
+  "version": "1.0.0",
+  "description": "Paquete de fechas para la bitacora: marca de tiempo, fecha larga y fecha corta.",
+  "main": "src/index.js",
+  "keywords": [
+    "fechas",
+    "date",
+    "timestamp",
+    "es-ES",
+    "bitacora"
+  ],
+  "author": "Samuel Palacio Hoyos",
+  "license": "ISC",
+  "type": "commonjs"
+}
