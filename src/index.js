@@ -1,5 +1,5 @@
 const os = require('os');
-const fechas = require('./fechas');
+const fechas = require('fechas-bitacora-samuelpalaciohoyos');
 const notas = require('./notas');
 const almacen = require('./almacen');
 

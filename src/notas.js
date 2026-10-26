@@ -1,7 +1,7 @@
 const path = require('path');
 const hash = require('object-hash');
 const almacen = require('./almacen');
-const fechas = require('./fechas');
+const fechas = require('fechas-bitacora-samuelpalaciohoyos');
 
 const ETIQUETA_POR_DEFECTO = 'general';
 
