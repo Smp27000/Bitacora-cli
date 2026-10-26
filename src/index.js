@@ -27,6 +27,12 @@ Ejemplos:
 `);
 }
 
+// Muestra el mensaje y lo deja en la bitacora: fecha | comando | resultado
+function responder(comando, mensaje) {
+    console.log(mensaje);
+    almacen.registrarAccion(comando, mensaje);
+}
+
 function formatearNota(nota) {
     return `[${nota.id}] (${nota.etiqueta}) ${fechas.getShortDate('es-ES', nota.fecha)} — ${nota.texto}`;
 }
@@ -36,23 +42,19 @@ function ejecutarAgregar(args) {
     const etiqueta = args[1] || ETIQUETA_POR_DEFECTO;
 
     if (texto === '') {
-        console.log('No indicaste el texto de la nota. Ejemplo: npm start -- agregar "Hoy aprendi a usar fs" nodejs');
-        almacen.registrarAccion('agregar', 'error: texto vacio o ausente');
-        return;
+        return responder('agregar', 'No indicaste el texto de la nota. Ejemplo: npm start -- agregar "Hoy aprendi a usar fs" nodejs');
     }
 
     const resultado = notas.agregarNota(texto, etiqueta);
 
     if (!resultado.guardada) {
-        console.log(`Ya existe una nota igual (id ${resultado.id}). No se guardo.`);
-        almacen.registrarAccion('agregar', `duplicada (id ${resultado.id})`);
-        return;
+        return responder('agregar', `Ya existe una nota igual (id ${resultado.id}). No se guardo.`);
     }
 
-    console.log(
+    responder(
+        'agregar',
         `Nota guardada [${resultado.id}] (${resultado.nota.etiqueta}) — ${fechas.getLongTime('es-ES', resultado.nota.fecha)}`
     );
-    almacen.registrarAccion('agregar', `guardada (id ${resultado.id})`);
 }
 
 function ejecutarListar(args) {
@@ -68,9 +70,7 @@ function ejecutarListar(args) {
     const lista = notas.listarNotas(cantidad);
 
     if (lista.length === 0) {
-        console.log('Todavia no hay notas guardadas.');
-        almacen.registrarAccion('listar', 'sin notas');
-        return;
+        return responder('listar', 'Todavia no hay notas guardadas.');
     }
 
     lista.forEach((nota) => console.log(formatearNota(nota)));
@@ -81,17 +81,13 @@ function ejecutarBuscar(args) {
     const palabra = (args[0] || '').trim();
 
     if (palabra === '') {
-        console.log('Debes indicar una palabra para buscar. Ejemplo: npm start -- buscar fs');
-        almacen.registrarAccion('buscar', 'error: palabra ausente');
-        return;
+        return responder('buscar', 'Debes indicar una palabra para buscar. Ejemplo: npm start -- buscar fs');
     }
 
     const encontradas = notas.buscarNotas(palabra);
 
     if (encontradas.length === 0) {
-        console.log(`No se encontraron notas que contengan "${palabra}".`);
-        almacen.registrarAccion('buscar', `0 resultados para "${palabra}"`);
-        return;
+        return responder('buscar', `No se encontraron notas que contengan "${palabra}".`);
     }
 
     encontradas.forEach((nota) => console.log(formatearNota(nota)));
@@ -102,48 +98,36 @@ function ejecutarBorrar(args) {
     const id = (args[0] || '').trim();
 
     if (id === '') {
-        console.log('Debes indicar el id de la nota. Ejemplo: npm start -- borrar 3f9a1c2e');
-        almacen.registrarAccion('borrar', 'error: id ausente');
-        return;
+        return responder('borrar', 'Debes indicar el id de la nota. Ejemplo: npm start -- borrar 3f9a1c2e');
     }
 
     const eliminada = notas.borrarNota(id);
 
     if (!eliminada) {
-        console.log(`No existe una nota con el id "${id}".`);
-        almacen.registrarAccion('borrar', `error: id ${id} inexistente`);
-        return;
+        return responder('borrar', `No existe una nota con el id "${id}".`);
     }
 
-    console.log(`Nota eliminada [${eliminada.id}] — ${eliminada.texto}`);
-    almacen.registrarAccion('borrar', `eliminada (id ${eliminada.id})`);
+    responder('borrar', `Nota eliminada [${eliminada.id}] — ${eliminada.texto}`);
 }
 
 function ejecutarRespaldar() {
-    const destino = notas.respaldarNotas();
+    const destino = almacen.respaldarNotas();
 
     if (!destino) {
-        console.log('Todavia no hay notas para respaldar (no existe data/notas.json).');
-        almacen.registrarAccion('respaldar', 'error: no existe notas.json');
-        return;
+        return responder('respaldar', 'Todavia no hay notas para respaldar (no existe data/notas.json).');
     }
 
-    console.log(`Respaldo creado en ${destino}`);
-    almacen.registrarAccion('respaldar', `respaldo en ${destino}`);
+    responder('respaldar', `Respaldo creado en ${destino}`);
 }
 
 function ejecutarExportar(args) {
-    const destino = args[0] || os.homedir();
-    const resultado = notas.exportarNotas(destino);
+    const resultado = notas.exportarNotas(args[0] || os.homedir());
 
     if (!resultado.exportado) {
-        console.log(resultado.motivo);
-        almacen.registrarAccion('exportar', `error: ${resultado.motivo}`);
-        return;
+        return responder('exportar', resultado.motivo);
     }
 
-    console.log(`Exportacion lista en ${resultado.destino} (${resultado.total} notas).`);
-    almacen.registrarAccion('exportar', `archivo movido a ${resultado.destino}`);
+    responder('exportar', `Exportacion lista en ${resultado.destino} (${resultado.total} notas).`);
 }
 
 function main() {
@@ -159,19 +143,15 @@ function main() {
         case 'borrar':
             return ejecutarBorrar(args);
         case 'respaldar':
-            return ejecutarRespaldar(args);
+            return ejecutarRespaldar();
         case 'exportar':
             return ejecutarExportar(args);
-        case 'ayuda':
-            mostrarAyuda();
-            almacen.registrarAccion('ayuda', 'ayuda mostrada');
-            return;
         default:
-            if (comando) {
+            if (comando !== undefined && comando !== 'ayuda') {
                 console.log(`El comando "${comando}" no existe.`);
             }
             mostrarAyuda();
-            almacen.registrarAccion(comando || 'sin comando', 'comando desconocido o ausente');
+            almacen.registrarAccion(comando || 'sin comando', 'ayuda mostrada');
     }
 }
 

@@ -10,73 +10,61 @@ function crearId(texto) {
     return hash(texto).slice(0, 8);
 }
 
+// Guarda una nota. Si ya hay una con el mismo texto devuelve guardada: false.
 function agregarNota(texto, etiqueta = ETIQUETA_POR_DEFECTO) {
     const notas = almacen.leerNotas();
     const id = crearId(texto);
-    const repetida = notas.find((nota) => nota.id === id);
 
-    if (repetida) {
-        return { guardada: false, id: repetida.id, nota: repetida };
+    if (notas.some((nota) => nota.id === id)) {
+        return { guardada: false, id };
     }
 
-    const nota = {
-        id,
-        texto,
-        etiqueta: etiqueta || ETIQUETA_POR_DEFECTO,
-        fecha: fechas.getTimeStamp()
-    };
-
+    const nota = { id, texto, etiqueta, fecha: fechas.getTimeStamp() };
     notas.push(nota);
     almacen.escribirNotas(notas);
 
     return { guardada: true, id, nota };
 }
 
-// Devuelve las ultimas "cantidad" notas, la mas reciente primero.
+// Ultimas "cantidad" notas, la mas reciente primero.
 function listarNotas(cantidad = 5) {
-    const notas = almacen.leerNotas();
-    return notas.slice(-cantidad).reverse();
+    return almacen.leerNotas().slice(-cantidad).reverse();
 }
 
+// Notas cuyo texto contiene la palabra (sin distinguir mayusculas).
 function buscarNotas(palabra) {
     const objetivo = palabra.toLowerCase();
-    const notas = almacen.leerNotas();
-    return notas.filter((nota) => nota.texto.toLowerCase().includes(objetivo));
+    return almacen.leerNotas().filter((nota) => nota.texto.toLowerCase().includes(objetivo));
 }
 
+// Borra la nota con ese id. Devuelve la nota borrada o null si no existe.
 function borrarNota(id) {
     const notas = almacen.leerNotas();
     const indice = notas.findIndex((nota) => nota.id === id);
-
-    if (indice === -1) {
-        return null;
-    }
+    if (indice === -1) return null;
 
     const [eliminada] = notas.splice(indice, 1);
     almacen.escribirNotas(notas);
     return eliminada;
 }
 
-function respaldarNotas() {
-    return almacen.respaldarArchivoNotas();
-}
-
-function construirContenidoExportacion(notas) {
-    const encabezado = [
-        'BITACORA DE NOTAS',
-        `Exportada el ${fechas.getLongTime('es-ES')}`,
-        `Total de notas: ${notas.length}`,
-        ''
-    ];
-
+// Texto plano con todas las notas.
+function contenidoExportacion(notas) {
     const lineas = notas.map((nota) =>
         `[${nota.id}] (${nota.etiqueta}) ${fechas.getShortDate('es-ES', nota.fecha)} — ${nota.texto}`
     );
 
-    return [...encabezado, ...lineas, ''].join('\n');
+    return [
+        'BITACORA DE NOTAS',
+        `Exportada el ${fechas.getLongTime('es-ES')}`,
+        `Total de notas: ${notas.length}`,
+        '',
+        ...lineas,
+        ''
+    ].join('\n');
 }
 
-// Reto 2: genera exportacion.txt en salida/ y lo MUEVE a una ruta absoluta.
+// Reto 2: crea exportacion.txt en salida/ y lo MUEVE a una carpeta absoluta existente.
 function exportarNotas(destino) {
     if (!path.isAbsolute(destino)) {
         return {
@@ -86,27 +74,21 @@ function exportarNotas(destino) {
     }
 
     if (!almacen.existeRuta(destino)) {
-        return {
-            exportado: false,
-            motivo: `La carpeta "${destino}" no existe, asi que no se movio nada.`
-        };
+        return { exportado: false, motivo: `La carpeta "${destino}" no existe, asi que no se movio nada.` };
     }
 
     const notas = almacen.leerNotas();
-    const origen = almacen.crearArchivoExportacion(construirContenidoExportacion(notas));
+    const origen = almacen.crearArchivoExportacion(contenidoExportacion(notas));
     const destinoFinal = path.join(destino, 'exportacion.txt');
-
     almacen.moverArchivo(origen, destinoFinal);
 
     return { exportado: true, destino: destinoFinal, total: notas.length };
 }
 
 module.exports = {
-    crearId,
     agregarNota,
     listarNotas,
     buscarNotas,
     borrarNota,
-    respaldarNotas,
     exportarNotas
 };
