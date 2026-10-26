@@ -1,13 +1,20 @@
 {
-  "name": "taller1",
+  "name": "bitacora-cli",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Bitacora de aprendizaje por consola: guarda notas, evita duplicados, genera respaldos y exporta a texto.",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "bitacora",
+    "notas",
+    "cli",
+    "fs",
+    "nodejs"
+  ],
+  "author": "Samuel Palacio Hoyos",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
